@@ -11,6 +11,12 @@ Topic in → **5 multiple-choice questions (A–D)** out → **Submit** → scor
 
 SPECIAL NOTE: Wiki articles are effectively excluded in MOCK mode
 
+## Submission Summary
+
+The system is designed as a modular web application with a React (Vite) frontend and an Express backend. The backend provides a single API that accepts a topic, optionally retrieves a short Wikipedia summary for grounding, constructs a structured prompt, and invokes the chosen AI provider. Responses are parsed and validated against a strict schema (five questions, four options, single correct answer) before being sent to the frontend. The frontend offers a clean interface to generate quizzes, select answers, and view results with clear visual feedback. This separation of concerns ensures scalability, testability, and straightforward integration of new features.
+
+For AI integration, I built a provider abstraction that supports OpenAI, Anthropic, and Ollama (local small models), as well as a MOCK mode for demos. OpenAI and Anthropic deliver strong accuracy and fluency, while Ollama enables cost-effective, private experimentation with downloadable models like Mistral or Qwen. I added Wikipedia retrieval to ground model output in factual context and reduce hallucinations, and enforced validation to guarantee reliable quiz structure. These decisions balance flexibility, cost, and robustness, making the solution suitable for both rapid prototyping and enterprise-ready deployments. My primary testing was performed using Ollama.
+
 
 ## Quickstart
 ```bash
@@ -35,7 +41,7 @@ npm run dev # http://localhost:5173 (Vite dev)
 ## LLM Providers
 ```
 
-Set in server/.env:
+Set in server/.env.example:
 
 LLM_PROVIDER=MOCK (default; no keys)
 
