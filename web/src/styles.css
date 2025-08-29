@@ -1,0 +1,46 @@
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; }
+.wrap { max-width: 900px; margin: 0 auto; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+input[type="text"], input:not([type]) { padding: 8px 10px; font-size: 1rem; }
+button { padding: 8px 12px; font-size: 1rem; cursor: pointer; }
+label { display: inline-flex; align-items: center; gap: 6px; }
+.muted { color: #666; font-size: .9rem; }
+.quiz { margin-top: 16px; }
+.question { padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 12px; }
+.stem { font-weight: 600; margin-bottom: 8px; }
+.options { display: grid; gap: 6px; }
+.result { margin-top: 16px; padding: 10px; border-radius: 8px; background: #f6f8fa; }
+.explanation { margin-top: 6px; color: #444; }
+.error { color: #b00020; margin-top: 8px; }
+
+.site-footer {
+  margin-top: 40px;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+}
+
+.site-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+.qnum {
+  font-weight: 700;
+  margin-right: 6px;
+  color: #333;
+}
+
+.answer-correct {
+  color: #0a0; /* green */
+}
+
+.answer-wrong {
+  color: #b00020; /* red */
+}

@@ -1,0 +1,13 @@
+{
+  "name": "5lit-ai-quiz-builder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix web\"",
+    "server": "npm run dev --prefix server",
+    "web": "npm run dev --prefix web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
