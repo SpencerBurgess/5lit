@@ -65,4 +65,8 @@ OLLAMA_URL=http://127.0.0.1:11434
 
 ```
 
+## Demo Sample (Using Ollama deepseek-r1:8b)
+
+![Sample Image](SampleScreenshot.png?raw=true "Sample Image (Using Ollama deepseek-r1:8b)")
+
 ### Author: Spencer Burgess
