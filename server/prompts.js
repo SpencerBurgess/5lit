@@ -38,11 +38,12 @@ function strictJsonSuffix({
         'Double-quote all property names and string values.',
         'Do not include trailing commas, comments, or additional fields.',
         'Provide exactly 5 questions; each must include exactly 4 answer options labeled "A", "B", "C", "D".',
-        'Assign exactly one "correct_label" value ∈ {"A","B","C","D"} per question.',
+        'Assign exactly one "correct_label" value in {"A","B","C","D"} per question.',
         withExplanations ?
         'Include a concise 1–2 sentence "explanation" for each question.' :
         'Do NOT include the "explanation" field.',
         'Do NOT output ellipses ("..." or "…") or placeholders; supply complete values.',
+        'Do NOT include <think>…</think> or any hidden/prelude sections; return the JSON object only.',
         'Question IDs must be exactly "q1","q2","q3","q4","q5" in that order (unique and stable).',
         'Each stem must be unique and unambiguous; avoid duplicating stems.',
         'Option texts within a question must be distinct and specific (no near-duplicates).',
