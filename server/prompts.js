@@ -1,5 +1,5 @@
 /**
- * Prompts for quiz generation with a strict JSON-only option
+ * Prompts for quiz generation with a strict JSON-only option,
  * optimized for small/local models (e.g., deepseek-r1:8b via Ollama).
  *
  * Usage (OLLAMA branch recommended):
@@ -28,71 +28,95 @@ const SCHEMA_BLOCK = `Return ONE JSON object ONLY in this exact shape:
   ]
 }`;
 
-// Extra guardrails for small/local models.
-// Appending this reduces non-JSON chatter and invalid JSON formatting.
+// Additional guardrails for small/local models to reduce non-JSON chatter
+// and improve structural reliability. Numbering is generated automatically.
 function strictJsonSuffix({ withExplanations = false } = {}) {
-  const explainLine = withExplanations
-    ? '\n- Include a concise 1–2 sentence "explanation" for each question.\n'
-    : '\n- Do NOT include the "explanation" field.\n';
+  const rules = [
+    'Return exactly ONE JSON object; no preamble, commentary, or Markdown.',
+    'Double-quote all property names and string values.',
+    'Do not include trailing commas, comments, or additional fields.',
+    'Provide exactly 5 questions; each must include exactly 4 answer options labeled "A", "B", "C", "D".',
+    'Assign exactly one "correct_label" value ∈ {"A","B","C","D"} per question.',
+    withExplanations
+      ? 'Include a concise 1–2 sentence "explanation" for each question.'
+      : 'Do NOT include the "explanation" field.',
+    'Do NOT output ellipses ("..." or "…") or placeholders; supply complete values.',
+    'IDs must be unique and stable: "q1" through "q5".',
+    'IDs must be exactly "q1","q2","q3","q4","q5" in that order.',
+    'Each stem must be unique and unambiguous; avoid duplicating stems.',
+    'Option texts within a question must be distinct and specific (no near-duplicates).',
+    'Use clear, neutral language; factuality takes precedence over style.',
+    'Before returning, verify the JSON satisfies all OUTPUT RULES listed above (e.g., 1–11).'
+  ];
+  const numbered = rules.map((r, i) => `${i + 1}. ${r}`).join('\n');
+  return `
 
-  return (
-    '\n\n' +
-    'OUTPUT RULES (CRITICAL):\n' +
-    '- Output ONLY a single JSON object. No prose before/after. No code fences.\n' +
-    '- Double-quote ALL property names and string values.\n' +
-    '- Use exactly 5 questions and exactly 4 options per question (labels A–D).\n' +
-    '- Exactly one correct_label ∈ {"A","B","C","D"} per question.\n' +
-    '- No trailing commas. No comments. No additional fields.\n' +
-    explainLine +
-    '- If uncertain, prefer neutral, widely accepted facts.\n\n' +
-    SCHEMA_BLOCK
-  );
+OUTPUT RULES (MANDATORY):
+${numbered}
+
+${SCHEMA_BLOCK}`;
 }
 
 const SYSTEM_BASE = `
-You are a careful quiz builder. Generate multiple-choice questions that are factual,
-clear, and unambiguous.
+You are an assessment generator. Produce rigorous, unambiguous multiple-choice questions.
+Prioritize factual accuracy and clarity over creativity.
 `.trim();
 
 function userBase({ TOPIC, withExplanations = false, strictJson = false }) {
-  const core = `
-Build a 5-question multiple-choice quiz on the topic: "${TOPIC}".
+  const contentReqs = [
+    'Each question must assess a core concept of the topic; exclude trivial or peripheral facts.',
+    'Avoid trick questions, double negatives, and overly niche details.',
+    'Use clear, precise language suitable for an educated general audience.',
+    'All content must be original and free of copyrighted excerpts.'
+  ];
+  const numberedContentReqs = contentReqs.map((r, i) => `${i + 1}. ${r}`).join('\n');
 
-Constraints:
-- Exactly 5 questions, each with exactly 4 options labeled A–D.
-- Exactly one correct answer per question.
-- Questions must be stand-alone and test key concepts (avoid trivialities).
-- Wording must be clear and appropriate for an educated general audience.
-- Avoid trick questions, double negatives, and overly niche facts.
-- No copyrighted material excerpts.
+  const core = `
+Create a 5-question multiple-choice quiz on the topic: "${TOPIC}".
+
+CONTENT REQUIREMENTS (MANDATORY):
+${numberedContentReqs}
 `.trim();
 
   const exp = withExplanations
-    ? '\nAlso include a concise 1–2 sentence "explanation" for each question.'
+    ? '\nIf explanations are requested, include a concise 1–2 sentence "explanation" justifying the correct answer and clarifying common misconceptions.'
     : '';
 
-  const jsonBlock = strictJson ? strictJsonSuffix({ withExplanations }) : `
-
+  const jsonBlock = strictJson
+    ? strictJsonSuffix({ withExplanations })
+    : (`
 ${SCHEMA_BLOCK}
 
-RULE: Output JSON ONLY. No prose or code fences before/after the JSON.`.trim();
+RULE: Output JSON ONLY. No prose or code fences before/after the JSON.`.trim());
 
   return core + exp + '\n\n' + jsonBlock;
 }
 
 const SYSTEM_WITH_CONTEXT = `
-You are a quiz generator that uses provided context to improve factual accuracy.
-Prefer details present in the context; if missing, default to widely accepted facts.
+You are an assessment generator that uses provided context to improve factual accuracy.
+When the context covers a point, prefer it; otherwise default to widely accepted facts.
+Do not quote or reproduce long excerpts; write original questions.
 `.trim();
 
 function userWithContext({ TOPIC, CONTEXT, withExplanations = false, strictJson = false }) {
+  const contextUsage = [
+    'Use the context solely as grounding for factual accuracy; do not copy long passages verbatim.',
+    'Prefer details present in the context when available; otherwise use widely accepted facts.',
+    'Do not fabricate citations or facts not supported by the context or common knowledge.',
+    'If the context is ambiguous, choose neutral, widely accepted formulations.'
+  ];
+  const numberedContextUsage = contextUsage.map((r, i) => `${i + 1}. ${r}`).join('\n');
+
   const header = `
 Context for topic "${TOPIC}":
 ---
 ${CONTEXT}
 ---
 
-Now generate the 5-question quiz as specified below.
+CONTEXT USAGE RULES (MANDATORY):
+${numberedContextUsage}
+
+Using the context above only as factual grounding, produce the quiz specified below.
 `.trim();
 
   const base = userBase({ TOPIC, withExplanations, strictJson });
