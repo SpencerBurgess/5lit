@@ -15,7 +15,13 @@ import {
 import {
     fetchWikipediaSummary
 } from './retrieval.js';
-
+import {
+  stripThinkBlocks,
+  stripCodeFences,
+  removeEllipsesOutsideStrings,
+  removeTrailingCommas,
+  extractFirstJsonObject
+} from './utils/jsonSanitizer.js';
 
 const app = express();
 app.use(cors({
@@ -73,10 +79,11 @@ app.post('/api/generate-quiz', async (req, res) => {
         }
 
 
-        // Build messages
-        const messages = context ?
-            buildMessagesWithContext(cleanTopic, context) :
-            buildMessages(cleanTopic, withExplanations);
+        // Build messages according to mode (use strictJson=true for OLLAMA/local models)
+        const messages = context
+            ? buildMessagesWithContext(cleanTopic, context, { withExplanations, strictJson: LLM_PROVIDER === 'OLLAMA' })
+            : buildMessages(cleanTopic, withExplanations, { strictJson: LLM_PROVIDER === 'OLLAMA' });
+
 
 
         // Call provider
@@ -105,13 +112,17 @@ app.post('/api/generate-quiz', async (req, res) => {
 
 
         // Extract JSON safely
-        rawText = (rawText || '').trim();
-        const s = rawText.indexOf('{');
-        const e = rawText.lastIndexOf('}');
-        if (s !== -1 && e !== -1) rawText = rawText.slice(s, e + 1);
+        let raw = (rawText || '').trim();
+        raw = stripThinkBlocks(raw);
+        raw = stripCodeFences(raw);
+        raw = removeEllipsesOutsideStrings(raw);
+        raw = removeTrailingCommas(raw);
 
-
-        const quiz = JSON.parse(rawText);
+        const jsonSlice = extractFirstJsonObject(raw);
+        
+        if (!jsonSlice) throw new Error('Model did not return a parsable JSON object.');
+        
+        const quiz = JSON.parse(jsonSlice);
         const v = validateQuiz(quiz);
         if (!v.is_valid) return res.status(422).json({
             error: 'Quiz failed validation',
